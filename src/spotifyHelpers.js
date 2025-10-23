@@ -1,5 +1,6 @@
 import axios from "axios";
 import authHelpers from "./authHelpers";
+import musicDiscoveryHelpers from "./musicDiscoveryHelpers";
 
 const spotifyHelpers = {
   searchArtist: async function (val) {
@@ -209,6 +210,188 @@ const spotifyHelpers = {
       snapid = res;
     });
     return snapid;
+  },
+
+  /**
+   * Get recommendations with mood-based filtering
+   * @param {string} mood - One of: energetic, chill, focus, happy, melancholic, party, workout, sleep
+   * @param {array} seedTracks - Track IDs (optional)
+   * @param {array} seedArtists - Artist IDs (optional)
+   * @param {number} limit - Number of recommendations
+   * @returns {Promise<array>} Array with recommendations data
+   */
+  getRecommendationsWithMood: async function (
+    mood,
+    seedTracks = [],
+    seedArtists = [],
+    limit = 100
+  ) {
+    const code = authHelpers.getCookie();
+    const data = await musicDiscoveryHelpers.getRecommendationsWithMood(
+      code,
+      mood,
+      seedTracks,
+      seedArtists,
+      limit
+    );
+    return [data];
+  },
+
+  /**
+   * Get recommendations with discovery slider
+   * @param {number} discoveryLevel - 0 (safe/similar) to 100 (adventurous/diverse)
+   * @param {array} seedTracks - Track IDs
+   * @param {array} seedArtists - Artist IDs (optional)
+   * @param {number} limit - Number of recommendations
+   * @returns {Promise<array>} Array with recommendations data
+   */
+  getRecommendationsWithDiscovery: async function (
+    discoveryLevel,
+    seedTracks = [],
+    seedArtists = [],
+    limit = 100
+  ) {
+    const code = authHelpers.getCookie();
+
+    // Get audio features for seed tracks to inform discovery algorithm
+    let audioFeatures = null;
+    if (seedTracks.length > 0) {
+      const features = await musicDiscoveryHelpers.getAudioFeatures(
+        code,
+        seedTracks
+      );
+      audioFeatures = musicDiscoveryHelpers.calculateAverageAudioFeatures(
+        features
+      );
+    }
+
+    const data = await musicDiscoveryHelpers.getRecommendationsWithDiscoverySlider(
+      code,
+      discoveryLevel,
+      seedTracks,
+      seedArtists,
+      audioFeatures,
+      limit
+    );
+    return [data];
+  },
+
+  /**
+   * Get recommendations with both mood and discovery level
+   * @param {string} mood - Mood preset name
+   * @param {number} discoveryLevel - 0 to 100
+   * @param {array} seedTracks - Track IDs
+   * @param {array} seedArtists - Artist IDs (optional)
+   * @param {number} limit - Number of recommendations
+   * @returns {Promise<array>} Array with recommendations data
+   */
+  getRecommendationsWithMoodAndDiscovery: async function (
+    mood,
+    discoveryLevel,
+    seedTracks = [],
+    seedArtists = [],
+    limit = 100
+  ) {
+    const code = authHelpers.getCookie();
+    const data = await musicDiscoveryHelpers.getRecommendationsWithMoodAndDiscovery(
+      code,
+      mood,
+      discoveryLevel,
+      seedTracks,
+      seedArtists,
+      limit
+    );
+    return [data];
+  },
+
+  /**
+   * Enhanced version of databyAllTimeTopTracks with mood filtering
+   */
+  databyAllTimeTopTracksWithMood: async function (range, mood) {
+    let code = authHelpers.getCookie();
+    let tracks = await this.getUserTopTracks(code, range);
+    let seed = await this.getTrackSeed(tracks);
+    let data = await this.getRecommendationsWithMood(mood, seed);
+    await this.formattedDatabyTracks(data);
+  },
+
+  /**
+   * Enhanced version of databyAllTimeTopArtists with mood filtering
+   */
+  databyAllTimeTopArtistsWithMood: async function (range, mood) {
+    let code = authHelpers.getCookie();
+    let artists = await this.getUserTopArtists(code, range);
+    let seed = await this.getArtistSeed(artists);
+    let data = await this.getRecommendationsWithMood(mood, [], seed);
+    await this.formattedDatabyArtists(data);
+  },
+
+  /**
+   * Enhanced version of databyAllTimeTopTracks with discovery slider
+   */
+  databyAllTimeTopTracksWithDiscovery: async function (range, discoveryLevel) {
+    let code = authHelpers.getCookie();
+    let tracks = await this.getUserTopTracks(code, range);
+    let seed = await this.getTrackSeed(tracks);
+    let data = await this.getRecommendationsWithDiscovery(discoveryLevel, seed);
+    await this.formattedDatabyTracks(data);
+  },
+
+  /**
+   * Enhanced version of databyAllTimeTopArtists with discovery slider
+   */
+  databyAllTimeTopArtistsWithDiscovery: async function (
+    range,
+    discoveryLevel
+  ) {
+    let code = authHelpers.getCookie();
+    let artists = await this.getUserTopArtists(code, range);
+    let seed = await this.getArtistSeed(artists);
+    let data = await this.getRecommendationsWithDiscovery(
+      discoveryLevel,
+      [],
+      seed
+    );
+    await this.formattedDatabyArtists(data);
+  },
+
+  /**
+   * Enhanced version with both mood and discovery
+   */
+  databyAllTimeTopTracksWithMoodAndDiscovery: async function (
+    range,
+    mood,
+    discoveryLevel
+  ) {
+    let code = authHelpers.getCookie();
+    let tracks = await this.getUserTopTracks(code, range);
+    let seed = await this.getTrackSeed(tracks);
+    let data = await this.getRecommendationsWithMoodAndDiscovery(
+      mood,
+      discoveryLevel,
+      seed
+    );
+    await this.formattedDatabyTracks(data);
+  },
+
+  /**
+   * Enhanced version with both mood and discovery for artists
+   */
+  databyAllTimeTopArtistsWithMoodAndDiscovery: async function (
+    range,
+    mood,
+    discoveryLevel
+  ) {
+    let code = authHelpers.getCookie();
+    let artists = await this.getUserTopArtists(code, range);
+    let seed = await this.getArtistSeed(artists);
+    let data = await this.getRecommendationsWithMoodAndDiscovery(
+      mood,
+      discoveryLevel,
+      [],
+      seed
+    );
+    await this.formattedDatabyArtists(data);
   },
 };
 
