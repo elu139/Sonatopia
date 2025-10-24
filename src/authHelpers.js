@@ -48,10 +48,10 @@ const authHelpers = {
   },
   getUserID: function () {
     if (document.cookie) {
-      return document.cookie
+      const cookie = document.cookie
         .split('; ')
-        .find(row => row.startsWith('spotiUID='))
-        .split('=')[1];
+        .find(row => row.startsWith('spotiUID='));
+      return cookie ? cookie.split('=')[1] : null;
     }
     else {
       return null;
@@ -59,10 +59,10 @@ const authHelpers = {
   },
   getUsername: function () {
     if (document.cookie) {
-      return document.cookie
+      const cookie = document.cookie
         .split('; ')
-        .find(row => row.startsWith('spotiUN='))
-        .split('=')[1];
+        .find(row => row.startsWith('spotiUN='));
+      return cookie ? cookie.split('=')[1] : null;
     }
     else {
       return null;
@@ -70,10 +70,10 @@ const authHelpers = {
   },
   getCookie: function () {
     if (document.cookie) {
-      return document.cookie
+      const cookie = document.cookie
         .split('; ')
-        .find(row => row.startsWith('spotiToken='))
-        .split('=')[1];
+        .find(row => row.startsWith('spotiToken='));
+      return cookie ? cookie.split('=')[1] : null;
     }
     else {
       return null;
