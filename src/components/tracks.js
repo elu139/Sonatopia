@@ -1,14 +1,22 @@
 import React, { Fragment } from "react";
 import spotifyHelpers from "../spotifyHelpers";
+import NetworkGraph from "./networkGraph";
 
 export default class tracks extends React.Component {
   state = {
     loading: true,
+    view: "list", // "list" or "network"
   };
 
   async componentDidMount() {
     this.state.loading = false;
   }
+
+  toggleView = () => {
+    this.setState((prevState) => ({
+      view: prevState.view === "list" ? "network" : "list",
+    }));
+  };
 
 
   render() {
@@ -17,65 +25,77 @@ export default class tracks extends React.Component {
         <div className="results">
           <div className="funcs">
             <button onClick={(e) => tracks.clearData()}>Go back</button>
+            <button onClick={this.toggleView}>
+              {this.state.view === "list" ? "Network View" : "List View"}
+            </button>
             <button onClick={(e) => spotifyHelpers.createPlaylist()}>
               Create a Playlist
             </button>
             {/* <span>listing {this.props.data.tracks.length} recommended tracks</span> */}
           </div>
-          <div className="tracks">
-            <ul>
-              {this.props.data.tracks.map((track) => (
-                <Fragment key={track.id}>
-                  <div className="track-info">
-                    {track.album.images[0] ? (
-                      <li className="art">
-                        <img
-                          alt="album art"
-                          src={track.album.images[2].url}
-                        ></img>
+
+          {this.state.view === "list" ? (
+            <div className="tracks">
+              <ul>
+                {this.props.data.tracks.map((track) => (
+                  <Fragment key={track.id}>
+                    <div className="track-info">
+                      {track.album.images[0] ? (
+                        <li className="art">
+                          <img
+                            alt="album art"
+                            src={track.album.images[2].url}
+                          ></img>
+                        </li>
+                      ) : (
+                        ""
+                      )}
+                      <li className="name">
+                        {track.name}
+                        <span>
+                          {track.artists.map(
+                            (item, index) => (index ? ", " : "") + item.name
+                          )}
+                        </span>
+                        <span className="album">{track.album.name}</span>
                       </li>
-                    ) : (
-                      ""
-                    )}
-                    <li className="name">
-                      {track.name}
-                      <span>
-                        {track.artists.map(
-                          (item, index) => (index ? ", " : "") + item.name
+                      <li className="preview">
+                        {track.preview_url ? (
+                          <button onClick={(e) => tracks.managePreview(e.target)}>
+                            Play Preview
+                          </button>
+                        ) : (
+                          ""
                         )}
-                      </span>
-                      <span className="album">{track.album.name}</span>
-                    </li>
-                    <li className="preview">
-                      {track.preview_url ? (
-                        <button onClick={(e) => tracks.managePreview(e.target)}>
-                          Play Preview
-                        </button>
-                      ) : (
-                        ""
-                      )}
-                      {track.preview_url ? (
-                        <audio loop>
-                          <source
-                            src={track.preview_url}
-                            type="audio/mp3"
-                          ></source>
-                        </audio>
-                      ) : (
-                        ""
-                      )}
-                    </li>
-                    <li className="duration">
-                      <span>{tracks.formatDuration(track.duration_ms)}</span>
-                    </li>
-                  </div>
-                </Fragment>
-              ))}
-            </ul>
-          </div>
+                        {track.preview_url ? (
+                          <audio loop>
+                            <source
+                              src={track.preview_url}
+                              type="audio/mp3"
+                            ></source>
+                          </audio>
+                        ) : (
+                          ""
+                        )}
+                      </li>
+                      <li className="duration">
+                        <span>{tracks.formatDuration(track.duration_ms)}</span>
+                      </li>
+                    </div>
+                  </Fragment>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <NetworkGraph spotiData={this.props.data} />
+          )}
+
           <div className="funcs">
             {/* <span>listing {this.props.data.tracks.length} recommended tracks</span> */}
             <button onClick={(e) => tracks.clearData()}>Go back</button>
+            <button onClick={this.toggleView}>
+              {this.state.view === "list" ? "Network View" : "List View"}
+            </button>
             <button onClick={(e) => spotifyHelpers.createPlaylist()}>
               Create a Playlist
             </button>
