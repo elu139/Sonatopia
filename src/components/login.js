@@ -23,6 +23,6 @@ export default class login extends React.Component {
   }
 }
 
-login.getAuth = () => {
-  authHelpers.getAuth()
+login.getAuth = async () => {
+  await authHelpers.getAuth()
 }

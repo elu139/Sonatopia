@@ -2,29 +2,114 @@ import { authCreds } from './authCreds';
 import axios from "axios";
 
 const authHelpers = {
-  getAuth: function () {
-    let url = 'https://accounts.spotify.com/authorize'
-      + '?response_type=token'
-      + '&client_id=' + encodeURIComponent(authCreds.client_id)
-      + '&scope=' + encodeURIComponent(authCreds.scope)
-      + '&redirect_uri=' + encodeURIComponent(authCreds.redirect_uri)
-      + '&state=' + encodeURIComponent(authCreds.state);
-    window.location.href = url;
+  // Generate a random string for code_verifier
+  generateRandomString: function(length) {
+    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const values = crypto.getRandomValues(new Uint8Array(length));
+    return values.reduce((acc, x) => acc + possible[x % possible.length], "");
   },
-  getHashCode: function () {
-    let hashParams = new URLSearchParams(window.location.hash.replace("#", "?"));
-    let queryParams = new URLSearchParams(window.location.search.replace("#", "?"));
-    let token = hashParams.get('access_token');
-    let err = queryParams.get('error');
-    if (token) {
-      document.cookie = "spotiToken=" + token + ";max-age=3600;samesite=lax;Secure";
-      this.setUserID(token);
-      return token;
+
+  // Generate code_challenge from code_verifier using SHA256
+  sha256: async function(plain) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(plain);
+    return window.crypto.subtle.digest('SHA-256', data);
+  },
+
+  base64encode: function(input) {
+    return btoa(String.fromCharCode(...new Uint8Array(input)))
+      .replace(/=/g, '')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
+  },
+
+  // Main auth function using PKCE
+  getAuth: async function () {
+    const codeVerifier = this.generateRandomString(64);
+
+    // Store code_verifier in sessionStorage for later use
+    sessionStorage.setItem('code_verifier', codeVerifier);
+
+    const hashed = await this.sha256(codeVerifier);
+    const codeChallenge = this.base64encode(hashed);
+
+    const params = new URLSearchParams({
+      client_id: authCreds.client_id,
+      response_type: 'code',
+      redirect_uri: authCreds.redirect_uri,
+      scope: authCreds.scope,
+      code_challenge_method: 'S256',
+      code_challenge: codeChallenge,
+    });
+
+    window.location.href = `https://accounts.spotify.com/authorize?${params.toString()}`;
+  },
+
+  // Get authorization code from callback and exchange for token
+  getHashCode: async function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const error = urlParams.get('error');
+
+    if (error) {
+      console.error('Auth error:', error);
+      return null;
     }
-    else if (err) {
-      return err;
+
+    if (code) {
+      const codeVerifier = sessionStorage.getItem('code_verifier');
+
+      if (!codeVerifier) {
+        console.error('Code verifier not found');
+        return null;
+      }
+
+      // Exchange code for access token
+      const token = await this.exchangeCodeForToken(code, codeVerifier);
+
+      if (token) {
+        // Clear the code_verifier from storage
+        sessionStorage.removeItem('code_verifier');
+
+        // Store token in cookie
+        document.cookie = "spotiToken=" + token + ";max-age=3600;samesite=lax;Secure";
+        await this.setUserID(token);
+        return token;
+      }
     }
-    else {
+
+    return null;
+  },
+
+  // Exchange authorization code for access token
+  exchangeCodeForToken: async function(code, codeVerifier) {
+    const params = new URLSearchParams({
+      client_id: authCreds.client_id,
+      grant_type: 'authorization_code',
+      code: code,
+      redirect_uri: authCreds.redirect_uri,
+      code_verifier: codeVerifier,
+    });
+
+    try {
+      const response = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: params.toString(),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Token exchange failed:', errorData);
+        return null;
+      }
+
+      const data = await response.json();
+      return data.access_token;
+    } catch (error) {
+      console.error('Error exchanging code for token:', error);
       return null;
     }
   },
