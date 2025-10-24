@@ -12,23 +12,32 @@ function App() {
   const [data, setData] = useState('');
 
   useEffect(() => {
-    authHelpers.checkCookie();
-    let hashCode = authHelpers.getHashCode();
-    let token = authHelpers.getCookie();
-    if (!token && hashCode) {
-      token = authHelpers.getHashCode();
-    }
-    else if (token && hashCode) {
-      token = authHelpers.getHashCode();
-    }
-    window.location.hash = "";
-    if (token) {
-      setToken(token);
-    }
-    let data = JSON.parse(localStorage.getItem("spotiData"));
-    if (data) {
-      setData(data)
-    }
+    const initAuth = async () => {
+      authHelpers.checkCookie();
+      let token = authHelpers.getCookie();
+
+      // Check if we have an authorization code in the URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+
+      if (code && !token) {
+        // Exchange code for token
+        token = await authHelpers.getHashCode();
+        // Clear the URL parameters after processing
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+
+      if (token) {
+        setToken(token);
+      }
+
+      let data = JSON.parse(localStorage.getItem("spotiData"));
+      if (data) {
+        setData(data);
+      }
+    };
+
+    initAuth();
   }, [])
 
   return (
