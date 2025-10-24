@@ -852,3 +852,197 @@ body {
         }
     }
 }
+
+// Network Graph Styles
+.network-graph-container {
+    width: 100%;
+    min-height: 600px;
+    background-color: #191414;
+    border-radius: 10px;
+    padding: 1rem;
+    margin: 1rem 0;
+
+    @media (min-width: 760px) {
+        min-height: 700px;
+    }
+
+    .network-graph-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(29, 185, 84, 0.3);
+
+        h2 {
+            color: #1db954;
+            font-size: 1.5rem;
+            margin: 0.5rem 0;
+            text-align: center;
+
+            @media (min-width: 760px) {
+                font-size: 2rem;
+            }
+        }
+
+        .network-legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+
+            .legend-item {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                font-size: 0.75rem;
+                color: #b3b3b3;
+
+                @media (min-width: 760px) {
+                    font-size: 0.85rem;
+                }
+
+                .legend-color {
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 50%;
+                    border: 2px solid rgba(255, 255, 255, 0.3);
+
+                    &.seed {
+                        background-color: #1DB954;
+                    }
+
+                    &.related {
+                        background-color: #B49BC8;
+                    }
+
+                    &.rec-close {
+                        background-color: #1ED760;
+                    }
+
+                    &.rec-far {
+                        background-color: #FF8C00;
+                    }
+                }
+            }
+        }
+    }
+
+    .node-info-panel {
+        position: absolute;
+        top: 120px;
+        right: 20px;
+        background-color: rgba(25, 20, 20, 0.95);
+        border: 2px solid #1db954;
+        border-radius: 10px;
+        padding: 1rem;
+        max-width: 300px;
+        z-index: 1000;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+
+        @media (max-width: 760px) {
+            position: relative;
+            top: 0;
+            right: 0;
+            max-width: 100%;
+            margin: 1rem 0;
+        }
+
+        h3 {
+            color: #1db954;
+            margin: 0 0 0.5rem 0;
+            font-size: 1.2rem;
+        }
+
+        p {
+            margin: 0.3rem 0;
+            font-size: 0.85rem;
+            color: #b3b3b3;
+
+            &.node-type {
+                color: #1db954;
+                font-weight: 600;
+            }
+
+            &.node-popularity {
+                color: #fff;
+            }
+
+            &.node-genres {
+                font-style: italic;
+            }
+
+            &.node-distance {
+                color: #FFD700;
+                font-weight: 600;
+            }
+
+            .closest-seed {
+                color: #1ED760;
+                font-size: 0.75rem;
+            }
+        }
+    }
+
+    .network-graph-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 400px;
+        color: #1db954;
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(29, 185, 84, 0.2);
+            border-top-color: #1db954;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        p {
+            margin-top: 1rem;
+            font-size: 1rem;
+            color: #b3b3b3;
+        }
+    }
+
+    .network-graph-empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 400px;
+        color: #b3b3b3;
+        font-size: 1rem;
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .network-graph-info {
+        text-align: center;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(29, 185, 84, 0.3);
+
+        p {
+            margin: 0.3rem 0;
+            color: #b3b3b3;
+            font-size: 0.85rem;
+
+            &.graph-hint {
+                font-size: 0.75rem;
+                font-style: italic;
+                color: #808080;
+            }
+        }
+    }
+
+    // Canvas container for the force graph
+    > div {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+}
